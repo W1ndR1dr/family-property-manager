@@ -6,5 +6,7 @@ export {
   Mortgage,
   AmortizationScheduleItem,
   Document,
+  Property,
+  Distribution,
   User
 } from './localStorage';

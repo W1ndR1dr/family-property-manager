@@ -1,41 +1,31 @@
 import Layout from "./Layout.jsx";
 
 import Dashboard from "./Dashboard";
-
 import Members from "./Members";
-
 import Contributions from "./Contributions";
-
 import Transactions from "./Transactions";
-
 import Mortgage from "./Mortgage";
-
 import Reports from "./Reports";
-
 import Import from "./Import";
-
 import Documents from "./Documents";
+import Settings from "./Settings";
+import Property from "./Property";
+import Distributions from "./Distributions";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
-    
     Dashboard: Dashboard,
-    
+    Property: Property,
     Members: Members,
-    
     Contributions: Contributions,
-    
     Transactions: Transactions,
-    
+    Distributions: Distributions,
     Mortgage: Mortgage,
-    
-    Reports: Reports,
-    
-    Import: Import,
-    
     Documents: Documents,
-    
+    Reports: Reports,
+    Import: Import,
+    Settings: Settings,
 }
 
 function _getCurrentPage(url) {
@@ -58,27 +48,19 @@ function PagesContent() {
     
     return (
         <Layout currentPageName={currentPage}>
-            <Routes>            
-                
-                    <Route path="/" element={<Dashboard />} />
-                
-                
+            <Routes>
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/Dashboard" element={<Dashboard />} />
-                
+                <Route path="/Property" element={<Property />} />
                 <Route path="/Members" element={<Members />} />
-                
                 <Route path="/Contributions" element={<Contributions />} />
-                
                 <Route path="/Transactions" element={<Transactions />} />
-                
+                <Route path="/Distributions" element={<Distributions />} />
                 <Route path="/Mortgage" element={<Mortgage />} />
-                
-                <Route path="/Reports" element={<Reports />} />
-                
-                <Route path="/Import" element={<Import />} />
-                
                 <Route path="/Documents" element={<Documents />} />
-                
+                <Route path="/Reports" element={<Reports />} />
+                <Route path="/Import" element={<Import />} />
+                <Route path="/Settings" element={<Settings />} />
             </Routes>
         </Layout>
     );

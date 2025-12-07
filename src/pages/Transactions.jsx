@@ -105,13 +105,35 @@ export default function Transactions() {
 
   const getCategoryColor = (category) => {
     const colors = {
+      // Income categories
       rent: "bg-green-100 text-green-800",
-      mortgage: "bg-red-100 text-red-800", 
-      insurance: "bg-blue-100 text-blue-800",
-      maintenance: "bg-orange-100 text-orange-800",
+      late_fees: "bg-green-100 text-green-800",
+      pet_fees: "bg-green-100 text-green-800",
+      parking: "bg-green-100 text-green-800",
+      laundry: "bg-green-100 text-green-800",
+      other_income: "bg-green-100 text-green-800",
+      // Expense categories (Schedule E aligned)
+      advertising: "bg-blue-100 text-blue-800",
+      auto_travel: "bg-slate-100 text-slate-800",
+      cleaning_maintenance: "bg-orange-100 text-orange-800",
+      commissions: "bg-indigo-100 text-indigo-800",
+      insurance: "bg-cyan-100 text-cyan-800",
+      legal_professional: "bg-pink-100 text-pink-800",
+      management_fees: "bg-purple-100 text-purple-800",
+      mortgage_interest: "bg-red-100 text-red-800",
+      other_interest: "bg-red-100 text-red-800",
       repairs: "bg-yellow-100 text-yellow-800",
-      utilities: "bg-purple-100 text-purple-800",
-      property_management: "bg-indigo-100 text-indigo-800",
+      supplies: "bg-amber-100 text-amber-800",
+      property_taxes: "bg-rose-100 text-rose-800",
+      utilities: "bg-violet-100 text-violet-800",
+      hoa_fees: "bg-teal-100 text-teal-800",
+      landscaping: "bg-lime-100 text-lime-800",
+      pest_control: "bg-emerald-100 text-emerald-800",
+      other_expense: "bg-gray-100 text-gray-800",
+      // Legacy categories (for backward compatibility)
+      mortgage: "bg-red-100 text-red-800",
+      maintenance: "bg-orange-100 text-orange-800",
+      property_management: "bg-purple-100 text-purple-800",
       legal_fees: "bg-pink-100 text-pink-800",
       other: "bg-gray-100 text-gray-800"
     };

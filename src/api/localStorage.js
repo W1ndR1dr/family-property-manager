@@ -123,6 +123,8 @@ export const Transaction = createEntity('Transaction');
 export const Mortgage = createEntity('Mortgage');
 export const AmortizationScheduleItem = createEntity('AmortizationScheduleItem');
 export const Document = createEntity('Document');
+export const Property = createEntity('Property');
+export const Distribution = createEntity('Distribution');
 
 // User/Auth stub - for standalone mode, we don't need authentication
 export const User = {

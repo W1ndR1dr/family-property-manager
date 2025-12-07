@@ -3,15 +3,17 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { 
-    LayoutDashboard, 
-    Users, 
-    TrendingUp, 
-    Receipt, 
+import {
+    LayoutDashboard,
+    Users,
+    TrendingUp,
+    Receipt,
     FileText,
     Building2,
     Home,
-    FileArchive // Added FileArchive import for the new Documents page
+    FileArchive,
+    Settings,
+    PiggyBank
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +36,11 @@ const navigationItems = [
     icon: LayoutDashboard,
   },
   {
+    title: "Property",
+    url: createPageUrl("Property"),
+    icon: Building2,
+  },
+  {
     title: "Members",
     url: createPageUrl("Members"),
     icon: Users,
@@ -49,12 +56,17 @@ const navigationItems = [
     icon: Receipt,
   },
   {
+    title: "Distributions",
+    url: createPageUrl("Distributions"),
+    icon: PiggyBank,
+  },
+  {
     title: "Mortgage",
     url: createPageUrl("Mortgage"),
     icon: Home,
   },
   {
-    title: "Documents", // New navigation item for Documents
+    title: "Documents",
     url: createPageUrl("Documents"),
     icon: FileArchive,
   },
@@ -62,6 +74,11 @@ const navigationItems = [
     title: "Reports",
     url: createPageUrl("Reports"),
     icon: FileText,
+  },
+  {
+    title: "Settings",
+    url: createPageUrl("Settings"),
+    icon: Settings,
   },
 ];
 

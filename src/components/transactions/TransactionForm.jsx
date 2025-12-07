@@ -11,9 +11,35 @@ import { Save, X, Calendar as CalendarIcon, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { UploadFile } from "@/api/integrations";
 
+// Schedule E aligned categories for tax reporting
 const TRANSACTION_CATEGORIES = {
-  income: ["rent", "other"],
-  expense: ["mortgage", "insurance", "maintenance", "repairs", "utilities", "property_management", "legal_fees", "other"]
+  income: [
+    "rent",
+    "late_fees",
+    "pet_fees",
+    "parking",
+    "laundry",
+    "other_income"
+  ],
+  expense: [
+    "advertising",
+    "auto_travel",
+    "cleaning_maintenance",
+    "commissions",
+    "insurance",
+    "legal_professional",
+    "management_fees",
+    "mortgage_interest",
+    "other_interest",
+    "repairs",
+    "supplies",
+    "property_taxes",
+    "utilities",
+    "hoa_fees",
+    "landscaping",
+    "pest_control",
+    "other_expense"
+  ]
 };
 
 export default function TransactionForm({ transaction, onSubmit, onCancel }) {
