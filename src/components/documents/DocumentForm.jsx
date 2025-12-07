@@ -5,13 +5,31 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { UploadPrivateFile } from "@/api/integrations";
-import { Upload, Save, X, File as FileIcon, Loader2 } from "lucide-react";
+import { Upload, Save, X, File as FileIcon, Loader2, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
 
-export default function DocumentForm({ document, onSubmit, onCancel }) {
+// Document categories aligned with property management and tax needs
+const DOCUMENT_CATEGORIES = [
+  { value: "Tax", label: "Tax Documents", description: "Tax returns, K-1s, depreciation schedules" },
+  { value: "Legal", label: "Legal", description: "LLC docs, contracts, agreements" },
+  { value: "Insurance", label: "Insurance", description: "Policies, claims, certificates" },
+  { value: "Receipts", label: "Receipts", description: "Expense receipts for tax deductions" },
+  { value: "Leases", label: "Leases", description: "Tenant leases and agreements" },
+  { value: "Property", label: "Property", description: "Deeds, titles, inspections" },
+  { value: "Mortgage", label: "Mortgage", description: "Loan documents, statements" },
+  { value: "Financial", label: "Financial", description: "Bank statements, reports" },
+  { value: "Other", label: "Other", description: "Miscellaneous documents" }
+];
+
+export default function DocumentForm({ document, transactions, onSubmit, onCancel }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('');
+    const [expirationDate, setExpirationDate] = useState(null);
+    const [linkedTransactionId, setLinkedTransactionId] = useState('');
     const [file, setFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -20,10 +38,14 @@ export default function DocumentForm({ document, onSubmit, onCancel }) {
             setName(document.name);
             setDescription(document.description || '');
             setCategory(document.category);
+            setExpirationDate(document.expiration_date ? new Date(document.expiration_date) : null);
+            setLinkedTransactionId(document.linked_transaction_id || '');
         } else {
             setName('');
             setDescription('');
             setCategory('');
+            setExpirationDate(null);
+            setLinkedTransactionId('');
             setFile(null);
         }
     }, [document]);
@@ -57,6 +79,8 @@ export default function DocumentForm({ document, onSubmit, onCancel }) {
                 name,
                 description,
                 category,
+                expiration_date: expirationDate ? expirationDate.toISOString() : null,
+                linked_transaction_id: linkedTransactionId || null,
             };
 
             // Only upload a new file if one was selected
@@ -78,6 +102,9 @@ export default function DocumentForm({ document, onSubmit, onCancel }) {
             setIsUploading(false);
         }
     };
+
+    // Filter transactions for expense receipts linking
+    const expenseTransactions = transactions?.filter(t => t.type === 'expense') || [];
 
     return (
         <Card className="bg-white border border-slate-200">
@@ -104,16 +131,82 @@ export default function DocumentForm({ document, onSubmit, onCancel }) {
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="LLC">LLC</SelectItem>
-                                    <SelectItem value="Property">Property</SelectItem>
-                                    <SelectItem value="Mortgage">Mortgage</SelectItem>
-                                    <SelectItem value="Financial">Financial</SelectItem>
-                                    <SelectItem value="Other">Other</SelectItem>
+                                    {DOCUMENT_CATEGORIES.map(cat => (
+                                        <SelectItem key={cat.value} value={cat.value}>
+                                            <div className="flex flex-col">
+                                                <span>{cat.label}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            {category && (
+                                <p className="text-xs text-slate-500">
+                                    {DOCUMENT_CATEGORIES.find(c => c.value === category)?.description}
+                                </p>
+                            )}
                         </div>
                     </div>
-                    
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Expiration Date (Optional)</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {expirationDate ? format(expirationDate, 'PPP') : 'No expiration'}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={expirationDate}
+                                        onSelect={setExpirationDate}
+                                        initialFocus
+                                    />
+                                    {expirationDate && (
+                                        <div className="p-2 border-t">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => setExpirationDate(null)}
+                                            >
+                                                Clear Date
+                                            </Button>
+                                        </div>
+                                    )}
+                                </PopoverContent>
+                            </Popover>
+                            <p className="text-xs text-slate-500">
+                                For insurance policies, leases, or other time-sensitive documents
+                            </p>
+                        </div>
+
+                        {category === 'Receipts' && expenseTransactions.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>Link to Transaction (Optional)</Label>
+                                <Select onValueChange={setLinkedTransactionId} value={linkedTransactionId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a transaction" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">None</SelectItem>
+                                        {expenseTransactions.slice(0, 20).map(t => (
+                                            <SelectItem key={t.id} value={t.id}>
+                                                {format(new Date(t.date), 'MM/dd/yy')} - ${t.amount} - {t.description?.substring(0, 30)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-slate-500">
+                                    Link this receipt to an expense for tax documentation
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="doc-description">Description</Label>
                         <Textarea

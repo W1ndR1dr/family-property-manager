@@ -1,23 +1,25 @@
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Contribution, Transaction, Member, Mortgage } from "@/api/entities";
+import { Contribution, Transaction, Member, Mortgage, Distribution } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { FileText, Download, TrendingUp, Calendar, DollarSign, Calculator } from "lucide-react";
 import { format } from "date-fns";
 
 import QuarterlyReport from "../components/reports/QuarterlyReport";
 import MemberReport from "../components/reports/MemberReport";
 import FinancialTrends from "../components/reports/FinancialTrends";
 import ExportOptions from "../components/reports/ExportOptions";
+import TaxReport from "../components/reports/TaxReport";
 
 export default function Reports() {
   const [contributions, setContributions] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [members, setMembers] = useState([]);
   const [mortgages, setMortgages] = useState([]);
+  const [distributions, setDistributions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedQuarter, setSelectedQuarter] = useState('current');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -30,21 +32,24 @@ export default function Reports() {
     setIsLoading(true);
     try {
       const [
-        contributionsData, 
-        transactionsData, 
-        membersData, 
-        mortgagesData
+        contributionsData,
+        transactionsData,
+        membersData,
+        mortgagesData,
+        distributionsData
       ] = await Promise.all([
         Contribution.list('-date'),
         Transaction.list('-date'),
         Member.list('name'),
-        Mortgage.list('-created_date')
+        Mortgage.list('-created_date'),
+        Distribution.list('-date')
       ]);
-      
+
       setContributions(contributionsData);
       setTransactions(transactionsData);
       setMembers(membersData);
       setMortgages(mortgagesData);
+      setDistributions(distributionsData);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -204,14 +209,15 @@ export default function Reports() {
           </div>
 
           <Tabs defaultValue="quarterly" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="quarterly">Quarterly Report</TabsTrigger>
+              <TabsTrigger value="tax">Tax Summary</TabsTrigger>
               <TabsTrigger value="members">Member Analysis</TabsTrigger>
               <TabsTrigger value="trends">Financial Trends</TabsTrigger>
             </TabsList>
 
             <TabsContent value="quarterly">
-              <QuarterlyReport 
+              <QuarterlyReport
                 data={selectedQuarterData}
                 members={members}
                 mortgages={mortgages}
@@ -219,8 +225,19 @@ export default function Reports() {
               />
             </TabsContent>
 
+            <TabsContent value="tax">
+              <TaxReport
+                transactions={transactions}
+                contributions={contributions}
+                members={members}
+                distributions={distributions}
+                selectedYear={selectedYear}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
             <TabsContent value="members">
-              <MemberReport 
+              <MemberReport
                 members={members}
                 contributions={contributions}
                 isLoading={isLoading}
@@ -228,7 +245,7 @@ export default function Reports() {
             </TabsContent>
 
             <TabsContent value="trends">
-              <FinancialTrends 
+              <FinancialTrends
                 contributions={contributions}
                 transactions={transactions}
                 isLoading={isLoading}
