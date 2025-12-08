@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Member, Contribution, Transaction, Mortgage, AmortizationScheduleItem } from "@/api/entities";
+import { Member, Contribution, Transaction, Mortgage, AmortizationScheduleItem, Property } from "@/api/entities";
 import { DollarSign, TrendingUp, Users, Receipt, Home } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { differenceInDays } from 'date-fns';
@@ -9,11 +9,13 @@ import MetricCard from "../components/dashboard/MetricCard";
 import QuickActions from "../components/dashboard/QuickActions";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import MortgageSnapshot from "../components/dashboard/MortgageSnapshot";
+import FinancialHealth from "../components/dashboard/FinancialHealth";
 
 export default function Dashboard() {
   const [members, setMembers] = useState([]);
   const [contributions, setContributions] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [property, setProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mortgageData, setMortgageData] = useState({
     isLoading: true,
@@ -23,6 +25,7 @@ export default function Dashboard() {
     totalPayments: 0,
     progressPercent: 0,
     propertyAddress: null,
+    currentBalance: 0,
   });
 
   useEffect(() => {
@@ -33,21 +36,28 @@ export default function Dashboard() {
     setIsLoading(true);
     try {
       const [
-        membersData, 
-        contributionsData, 
+        membersData,
+        contributionsData,
         transactionsData,
         mortgagesData,
-        scheduleItemsData
+        scheduleItemsData,
+        propertiesData
       ] = await Promise.all([
         Member.list(),
         Contribution.list('-date'),
         Transaction.list('-date'),
-        Mortgage.list('-created_date'), // Assuming the latest created is the primary mortgage
-        AmortizationScheduleItem.list('payment_number')
+        Mortgage.list('-created_date'),
+        AmortizationScheduleItem.list('payment_number'),
+        Property.list('-created_date')
       ]);
       setMembers(membersData);
       setContributions(contributionsData);
       setTransactions(transactionsData);
+
+      // Set the first property as the active one
+      if (propertiesData.length > 0) {
+        setProperty(propertiesData[0]);
+      }
 
       if (mortgagesData.length > 0 && scheduleItemsData.length > 0) {
         const mainMortgage = mortgagesData[0]; // Take the first mortgage as the main one
@@ -92,14 +102,19 @@ export default function Dashboard() {
         const paidPayments = amortizationSchedule.filter(p => p.status === '✅ Paid');
         const pendingPayments = amortizationSchedule.filter(p => p.status === 'Pending');
 
+        // Calculate current balance from remaining payments
+        const lastPaidPayment = amortizationSchedule.filter(p => p.status === '✅ Paid').sort((a, b) => b.payment_number - a.payment_number)[0];
+        const currentBalance = lastPaidPayment?.remaining_balance || mainMortgage.loan_amount;
+
         setMortgageData({
           isLoading: false,
-          lastPaid: paidPayments.sort((a, b) => new Date(b.paid_date) - new Date(a.paid_date))[0] || null, // Most recent paid
-          nextPending: pendingPayments.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))[0] || null, // Next upcoming pending
+          lastPaid: paidPayments.sort((a, b) => new Date(b.paid_date) - new Date(a.paid_date))[0] || null,
+          nextPending: pendingPayments.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))[0] || null,
           paymentsMade: paidPayments.length,
           totalPayments: scheduleItemsForMortgage.length,
           progressPercent: scheduleItemsForMortgage.length > 0 ? (paidPayments.length / scheduleItemsForMortgage.length) * 100 : 0,
           propertyAddress: mainMortgage.property_address,
+          currentBalance: currentBalance,
         });
       } else {
         // Handle cases where no mortgage or schedule data is available
@@ -125,41 +140,28 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto space-y-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Dashboard</h1>
-            <p className="text-slate-600">Overview of your family LLC apartment complex</p>
+            <p className="text-slate-600">Your family LLC property investment at a glance</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <MetricCard
-              title="Total Contributions"
-              value={`$${totalContributions.toLocaleString()}`}
-              icon={DollarSign}
-              color="blue"
-            />
-            <MetricCard
-              title="Net Income"
-              value={`$${netIncome.toLocaleString()}`}
-              icon={TrendingUp}
-              color={netIncome >= 0 ? "green" : "orange"}
-            />
-            <MetricCard
-              title="Total Expenses"
-              value={`$${totalExpenses.toLocaleString()}`}
-              icon={Receipt}
-              color="orange"
-            />
-          </div>
+          {/* Main Financial Health Dashboard */}
+          <FinancialHealth
+            transactions={transactions}
+            contributions={contributions}
+            members={members}
+            mortgageData={mortgageData}
+            property={property}
+          />
 
-          <MortgageSnapshot data={mortgageData} />
-
-          <div className="grid grid-cols-1 lg:col-span-3 gap-6">
+          {/* Quick Actions and Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
               <QuickActions />
             </div>
-            
+
             <div className="lg:col-span-2">
-              <RecentActivity 
-                contributions={contributions.slice(0, 5)} 
-                transactions={transactions.slice(0, 5)} 
+              <RecentActivity
+                contributions={contributions.slice(0, 5)}
+                transactions={transactions.slice(0, 5)}
               />
             </div>
           </div>
